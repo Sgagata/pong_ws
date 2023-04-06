@@ -29,16 +29,23 @@ endif()
 
 
 add_executable(light_position src/light_position.cpp)
-
-target_include_directories(light_position PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_include_directories(light_position  PRIVATE ${OpenCV_INCLUDE_DIRS})
 ament_target_dependencies(light_position rclcpp sensor_msgs std_msgs cv_bridge image_transport geometry_msgs)
-target_link_libraries(light_position ${OpenCV_LIBS})
+target_link_libraries(light_position ${OpenCV_LIBS} cv_bridge::cv_bridge)
 
 
+add_executable(light_position_subscriber src/light_position_subscriber.cpp)
+target_include_directories(light_position_subscriber  PRIVATE ${OpenCV_INCLUDE_DIRS})
+ament_target_dependencies(light_position_subscriber rclcpp sensor_msgs geometry_msgs)
+target_link_libraries(light_position_subscriber ${OpenCV_LIBS})
 
 # Install executable
 install(TARGETS
   light_position
+  DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+  light_position_subscriber
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files

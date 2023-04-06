@@ -1,83 +1,106 @@
+//all the includes
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include "geometry_msgs/msg/point_stamped.hpp"
-
+#include "cv_bridge/cv_bridge.hpp"
 
 class LightPosition : public rclcpp::Node
 {
 public:
     LightPosition() : Node("light_position") 
     {
-        publisher_ = this->create_publisher<geometry_msgs::msg::PointStamped>("light_position", 10);
-        camera_ = cv::VideoCapture(0); // use the default camera
-
-        // Check if the camera was opened successfully
-        if (!camera_.isOpened()) {
-        RCLCPP_ERROR(this->get_logger(), "Failed to open camera");
-        return;
-        }
-
-        // Set the resolution
-        camera_.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-        camera_.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
-
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(1000), std::bind(&LightPosition::analyze_frame, this));
+        //create publsiher for the light position on the left and right side of the screen
+        left_publisher_ = this->create_publisher<geometry_msgs::msg::PointStamped>("left_light_position", 10);
+        right_publisher_ = this->create_publisher<geometry_msgs::msg::PointStamped>("right_light_position", 10);
+        
+        //use the ready cam2image node
+        image_subscriber_ = create_subscription<sensor_msgs::msg::Image>("image", 10, std::bind(&LightPosition::image_callback, this, std::placeholders::_1));
 
     }
 
 private:
 
-    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr publisher_;
-    cv::VideoCapture camera_;
-    rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr left_publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr right_publisher_;
+    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscriber_;
 
 
-    void analyze_frame(){
+    void image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
 
         //get ROS2 image to open CV format
-        cv::Mat image;
-        camera_ >> image;
+        cv_bridge::CvImagePtr cv_image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+        cv::Mat image = cv_image->image;
+        //cam2image does not flip the obtained image
+        //left side in reality is right side in cam2image hence
+        cv::flip(image, image, 1);
 
         //to gray scale
         cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
-        int lower_threshold = 100;
+        //threhold for dectecting light pixels
+        int lower_threshold = 150;
         int upper_threshold = 255;
 
+        int image_width = image.cols;
+        int image_height = image.rows;
+
+        //splitting the image into left and right hand side
+        cv::Mat image_left = image(cv::Rect(0, 0, image_width/2, image_height));
+        cv::Mat image_right = image(cv::Rect(image_width/2, 0, image_width/2, image_height));
+
         //apply threshold
-        cv::threshold(image, image, lower_threshold, upper_threshold, cv::THRESH_BINARY);
+        cv::threshold(image_left, image_left, lower_threshold, upper_threshold, cv::THRESH_BINARY);
+        cv::threshold(image_right, image_right, lower_threshold, upper_threshold, cv::THRESH_BINARY);
 
-        // //find the center of gravity by looking at the average position of the pixels
-        // cv::Mat bright_pixels;
-        // cv::findNonZero(image, bright_pixels);
+        // there are two options check later which one is better
 
-        // double sum_x = 0;
-        // double sum_y = 0;
-        // for (int i = 0; i < bright_pixels.total(); i++) {
-        //     sum_x += bright_pixels.at<cv::Point>(i).x;
-        //     sum_y += bright_pixels.at<cv::Point>(i).y;
-        // }
+        // Option 1: find the center of gravity by looking at the average position of the pixels
+        cv::Mat bright_pixels_left;
+        cv::findNonZero(image_left, bright_pixels_left);
 
-        // double cx = sum_x / bright_pixels.total();
-        // double cy = sum_y / bright_pixels.total();
+        double sum_x = 0;
+        double sum_y = 0;
+        for (int i = 0; i < bright_pixels_left.total(); i++) {
+            sum_x += bright_pixels_left.at<cv::Point>(i).x;
+            sum_y += bright_pixels_left.at<cv::Point>(i).y;
+        }
+
+        double cx_left = sum_x / bright_pixels_left.total();
+        double cy_left = sum_y / bright_pixels_left.total();
 
 
-        // Compute center of gravity version 2
-        cv::Moments moments = cv::moments(image, true);
-        double cx = moments.m10 / moments.m00;
-        double cy = moments.m01 / moments.m00;
+        // Option2: Compute center of gravity using moments
 
-        // Publish light position
-        auto position_msg = std::make_unique<geometry_msgs::msg::PointStamped>();
+        cv::Moments moments_right = cv::moments(image_right, true);
+        double cx_right = moments_right.m10 / moments_right.m00;
+        double cy_right = moments_right.m01 / moments_right.m00;
+
+        //to map the output from 0 to 1, so its more robust towards changing window size
+        cx_left = cx_left/(image_width/2);
+        cy_left = cy_left/image_height;
+
+        cx_right = cx_right/(image_width/2);
+        cy_right = cy_right/image_height;
+
+        // Publish left light position
+        auto left_position_msg = std::make_unique<geometry_msgs::msg::PointStamped>();
         //set timestamp to current time
-        position_msg->header.stamp = this->now();
-        position_msg->header.frame_id = "camera_link";
-        position_msg->point.x = cx;
-        position_msg->point.y = cy;
+        left_position_msg->header.stamp = this->now();
+        left_position_msg->header.frame_id = "camera_link";
+        left_position_msg->point.x = cx_left;
+        left_position_msg->point.y = cy_left;
         //transfer pointer position_msg to publish()
-        publisher_->publish(std::move(position_msg));
+        left_publisher_->publish(std::move(left_position_msg));
+
+        // Publish right light position
+        auto right_position_msg = std::make_unique<geometry_msgs::msg::PointStamped>();
+        right_position_msg->header.stamp = this->now();
+        right_position_msg->header.frame_id = "camera_link";
+        right_position_msg->point.x = cx_right;
+        right_position_msg->point.y = cy_right;
+        right_publisher_->publish(std::move(right_position_msg));
 
     }   
 
