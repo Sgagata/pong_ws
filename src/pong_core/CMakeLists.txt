@@ -12,11 +12,6 @@ find_package(custom_messages REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-
-
-add_executable(window_size_publisher src/window_size_publisher.cpp)
-ament_target_dependencies(window_size_publisher rclcpp custom_messages)
-
 add_executable(right_bar_position src/right_bar_position.cpp)
 ament_target_dependencies(right_bar_position rclcpp custom_messages geometry_msgs)
 
@@ -28,6 +23,10 @@ ament_target_dependencies(game_state_publisher rclcpp custom_messages)
 
 add_executable(terminal_input src/terminal_input.cpp)
 ament_target_dependencies(terminal_input rclcpp custom_messages geometry_msgs)
+
+add_executable(window_server src/window_size_server.cpp)
+ament_target_dependencies(window_server rclcpp custom_messages)
+
 
 
 if(BUILD_TESTING)
@@ -45,10 +44,6 @@ endif()
 
 # Install executable
 install(TARGETS
-  window_size_publisher
-  DESTINATION lib/${PROJECT_NAME})
-
-install(TARGETS
   right_bar_position
   DESTINATION lib/${PROJECT_NAME})
 
@@ -62,6 +57,10 @@ install(TARGETS
 
 install(TARGETS
   terminal_input
+  DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+  window_server
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files

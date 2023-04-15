@@ -12,6 +12,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Windowsize.msg"
   "msg/Gamestate.msg"
+  "msg/Barstate.msg"
+  "srv/Windowsize.srv"
 )
 
 

@@ -1,5 +1,6 @@
+//get the input from the terminal to move the bar
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/point_stamped.hpp"
+#include "geometry_msgs/msg/point.hpp"
 #include <iostream>
 #include <string>
 
@@ -9,14 +10,14 @@ public:
   TerminalInputPublisher() : Node("terminal_input_publisher")
   {
     // Create a publisher with a topic "input" and a queue size of 10
-    publisher_ = this->create_publisher<geometry_msgs::msg::PointStamped>("terminal_input", 10);
+    publisher_ = this->create_publisher<geometry_msgs::msg::Point>("terminal_input", 10);
 
     // Start a timer that triggers the callback every 100 milliseconds
     timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&TerminalInputPublisher::timer_callback, this));
   }
 
 private:
-  rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr publisher_;
+  rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   void timer_callback()
@@ -35,12 +36,9 @@ private:
       return;
     }
 
-    auto message = geometry_msgs::msg::PointStamped();
-    message.header.stamp = this->now();
-    message.header.frame_id = "base_link";
-    message.point.x = 1.0;
-    message.point.y = y;
-    message.point.z = 0.0;
+    auto message = geometry_msgs::msg::Point();
+    message.x = 1.0;
+    message.y = y;
     publisher_->publish(message);
   }
 };
