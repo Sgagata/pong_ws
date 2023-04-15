@@ -41,7 +41,7 @@ private:
         cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
         //threhold for dectecting light pixels
-        int lower_threshold = 150;
+        int lower_threshold = 230;
         int upper_threshold = 255;
 
         int image_width = image.cols;
@@ -54,6 +54,13 @@ private:
         //apply threshold
         cv::threshold(image_left, image_left, lower_threshold, upper_threshold, cv::THRESH_BINARY);
         cv::threshold(image_right, image_right, lower_threshold, upper_threshold, cv::THRESH_BINARY);
+
+        cv::imshow("Left Thresholded Image", image_left);
+        cv::waitKey(1);
+
+        // display right thresholded image
+        cv::imshow("Right Thresholded Image", image_right);
+        cv::waitKey(1);
 
         // there are two options check later which one is better
 
