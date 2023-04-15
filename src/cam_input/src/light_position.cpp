@@ -3,17 +3,17 @@
 #include "sensor_msgs/msg/image.hpp"
 #include <opencv2/opencv.hpp>
 #include <iostream>
-#include "geometry_msgs/msg/point_stamped.hpp"
+#include "geometry_msgs/msg/point.hpp"
 #include "cv_bridge/cv_bridge.hpp"
 
 class LightPosition : public rclcpp::Node
 {
 public:
-    LightPosition() : Node("light_position") 
+    LightPosition() : Node("light_position"), count_(0) 
     {
         //create publsiher for the light position on the left and right side of the screen
-        left_publisher_ = this->create_publisher<geometry_msgs::msg::PointStamped>("left_light_position", 10);
-        right_publisher_ = this->create_publisher<geometry_msgs::msg::PointStamped>("right_light_position", 10);
+        left_publisher_ = this->create_publisher<geometry_msgs::msg::Point>("left_light_position", 10);
+        right_publisher_ = this->create_publisher<geometry_msgs::msg::Point>("right_light_position", 10);
         
         //use the ready cam2image node
         image_subscriber_ = create_subscription<sensor_msgs::msg::Image>("image", 10, std::bind(&LightPosition::image_callback, this, std::placeholders::_1));
@@ -22,9 +22,10 @@ public:
 
 private:
 
-    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr left_publisher_;
-    rclcpp::Publisher<geometry_msgs::msg::PointStamped>::SharedPtr right_publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr left_publisher_;
+    rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr right_publisher_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscriber_;
+    size_t count_;
 
 
     void image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
@@ -85,21 +86,17 @@ private:
         cy_right = cy_right/image_height;
 
         // Publish left light position
-        auto left_position_msg = std::make_unique<geometry_msgs::msg::PointStamped>();
+        auto left_position_msg = std::make_unique<geometry_msgs::msg::Point>();
         //set timestamp to current time
-        left_position_msg->header.stamp = this->now();
-        left_position_msg->header.frame_id = "camera_link";
-        left_position_msg->point.x = cx_left;
-        left_position_msg->point.y = cy_left;
+        left_position_msg->x = cx_left;
+        left_position_msg->y = cy_left;
         //transfer pointer position_msg to publish()
         left_publisher_->publish(std::move(left_position_msg));
 
         // Publish right light position
-        auto right_position_msg = std::make_unique<geometry_msgs::msg::PointStamped>();
-        right_position_msg->header.stamp = this->now();
-        right_position_msg->header.frame_id = "camera_link";
-        right_position_msg->point.x = cx_right;
-        right_position_msg->point.y = cy_right;
+        auto right_position_msg = std::make_unique<geometry_msgs::msg::Point>();
+        right_position_msg->x = cx_right;
+        right_position_msg->y = cy_right;
         right_publisher_->publish(std::move(right_position_msg));
 
     }   
