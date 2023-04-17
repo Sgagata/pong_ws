@@ -23,6 +23,8 @@ private:
     int32_t width_;
     int32_t height_;
 
+
+
     //the request has to be here otherwsie throws error
     void handleWindowSize(const std::shared_ptr<custom_messages::srv::Windowsize::Request> request,
                           const std::shared_ptr<custom_messages::srv::Windowsize::Response> response)

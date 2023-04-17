@@ -99,6 +99,8 @@ private:
         left_position_msg->y = cy_left;
         //transfer pointer position_msg to publish()
         left_publisher_->publish(std::move(left_position_msg));
+        RCLCPP_INFO(this->get_logger(), "Left_Height '%f'", cy_left);
+
 
         // Publish right light position
         auto right_position_msg = std::make_unique<geometry_msgs::msg::Point>();

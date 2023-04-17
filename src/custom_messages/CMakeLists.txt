@@ -8,13 +8,15 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Windowsize.msg"
   "msg/Gamestate.msg"
   "msg/Barstate.msg"
+  "msg/Ballstate.msg"
   "srv/Windowsize.srv"
+  DEPENDENCIES geometry_msgs
 )
-
 
 ament_package()

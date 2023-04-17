@@ -12,8 +12,8 @@ public:
     {
         // create subscriber for the position of the bar given by light
         position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("terminal_input", 10,
-                                                                                           std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
-        //create subscriber for the game state
+                                                                                    std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
+        // create subscriber for the game state
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
                                                                                             std::bind(&LeftBarPosition::game_state_callback, this, std::placeholders::_1));
 
@@ -39,20 +39,19 @@ private:
     // for publishing
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<custom_messages::msg::Barstate>::SharedPtr position_publisher_;
-
     // client
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
 
     // Member variables to store current position and window size information
-    float bar_spacing_; // Spacing between the bar and the walls
-    int bar_velocity_;  // set what is the speed of the bar
-    int current_x_;     // Current y-coordinate of the bar
-    int current_y_;     // Current y-coordinate of the bar
-    int game_state_;    // for reading the state of the game
-    int bar_height_;    // for height if the bar
-    int bar_width_;     // width of the bar
-    int window_width_;  // Width of the window
-    int window_height_; // Height of the window
+    float bar_spacing_;   // Spacing between the bar and the walls
+    int bar_velocity_;    // set what is the speed of the bar
+    int current_x_;       // Current y-coordinate of the bar
+    int current_y_;       // Current y-coordinate of the bar
+    int game_state_;      // for reading the state of the game
+    int bar_half_height_; // for height if the bar
+    int bar_half_width_;  // width of the bar
+    int window_width_;    // Width of the window
+    int window_height_;   // Height of the window
 
     void position_callback(const geometry_msgs::msg::Point::SharedPtr msg)
     {
@@ -61,15 +60,35 @@ private:
         RCLCPP_INFO(this->get_logger(), "Point '%f'", msg->y);
 
         // steering if the light is above half move up otherwise move down - the light point comes between 0 and 1
-        // maybe implement increase in speed based on distance, make 5 areas for speed
-        if (msg->y > 0.5)
+        // the more far away the light is the faster the bar moves
+        if (msg->y > 0.8)
+        {
+            new_y += 2 * bar_velocity_;
+        }
+        else if (msg->y > 0.6 && msg->y <= 0.8)
         {
             new_y += bar_velocity_;
         }
-        else if (msg->y < 0.5)
+        else if (msg->y > 0.2 && msg->y <= 0.4)
         {
             new_y -= bar_velocity_;
         }
+        else if (msg->y <= 0.2)
+        {
+            new_y -= 2 * bar_velocity_;
+        }
+        // cases that the bar does not leave the frame
+        //  full bar height = 2* bar_half_heigh_
+        if (new_y + bar_half_height_ > window_height_)
+        {
+            new_y = window_height_ - bar_half_height_;
+        }
+
+        if (new_y - bar_half_height_ < 0)
+        {
+            new_y = bar_half_height_;
+        }
+
         current_y_ = new_y;
         RCLCPP_INFO(this->get_logger(), "CALC'%d'", current_y_);
     }
@@ -87,8 +106,8 @@ private:
         auto message = custom_messages::msg::Barstate();
 
         message.y_position = current_y_;
-        message.width = bar_height_;
-        message.height = bar_width_;
+        message.half_width = bar_half_height_;
+        message.half_height = bar_half_width_;
 
         position_publisher_->publish(message);
 
@@ -108,17 +127,20 @@ private:
             }
             RCLCPP_INFO(this->get_logger(), "Waiting for service to be available...");
         }
-       // Send a request to the service
+        // Send a request to the service
         auto request = std::make_shared<custom_messages::srv::Windowsize::Request>();
         // request->a = 5; // Set the request value to 5
         auto result = send_request(request);
         if (result)
         {
             RCLCPP_INFO(this->get_logger(), "Received response: %d", result->width);
-            //update the info based on the info from server
+            // update the info based on the info from server
             window_height_ = result->height;
             window_width_ = result->width;
-            current_y_ = window_height_/2;
+            // the bar dimensions and bar location initially depend on the window size
+            current_y_ = window_height_ / 2;
+            bar_half_height_ = window_height_ * 0.2;
+            bar_half_width_ = window_width_ * 0.02;
         }
         else
         {
