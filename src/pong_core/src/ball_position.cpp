@@ -14,7 +14,7 @@ public:
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
                                                                                             std::bind(&BallPosition::game_state_callback, this, std::placeholders::_1));
 
-        velocity_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("collision_velocity", 10 std::bind(&BallPosition::update_velocity, this, std::placeholders::_1));
+        velocity_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("collision_velocity", 10, std::bind(&BallPosition::update_velocity, this, std::placeholders::_1));
 
         // Set up a client to request window size from the server
         client_ = this->create_client<custom_messages::srv::Windowsize>("get_window_size");
@@ -50,8 +50,7 @@ private:
     float ball_speed_;
     float velocity_x_;
     float velocity_y_;
-    float prev_velocity_x_;
-    float prev_velocity_y_;
+    int radius_; // the size of the ball
 
     void game_state_callback(const custom_messages::msg::Gamestate::SharedPtr state)
     {
@@ -85,6 +84,7 @@ private:
         message.position.x = current_x_;
         message.velocity.y = velocity_y_;
         message.velocity.x = velocity_x_;
+        message.radius = radius_;
 
         position_publisher_->publish(message);
     }
@@ -114,6 +114,7 @@ private:
             // the bar dimensions and bar location initially depend on the window size
             current_y_ = window_height_ / 2;
             current_x_ = window_width_ / 2;
+            radius_ = window_width_*0.005;
         }
         else
         {
