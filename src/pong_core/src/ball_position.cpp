@@ -24,9 +24,9 @@ public:
         position_publisher_ = this->create_publisher<custom_messages::msg::Ballstate>("ball_state", 10);
 
         // initial ball speed
-        ball_speed_ = 0.5;
+        ball_speed_ = 30;
         // also make publisher for that
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&BallPosition::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(1000), std::bind(&BallPosition::timer_callback, this));
     }
 
 private:
@@ -41,6 +41,7 @@ private:
     // client
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
 
+
     // Member variables to store current position and window size information
     int current_x_;     // Current y-coordinate of the ball
     int current_y_;     // Current y-coordinate of the ball
@@ -50,20 +51,47 @@ private:
     float ball_speed_;
     float velocity_x_;
     float velocity_y_;
-    int radius_; // the size of the ball
+    int radius_;  // the size of the ball
+    double angle; // use to get the velocity of the ball when restarted
 
     void game_state_callback(const custom_messages::msg::Gamestate::SharedPtr state)
     {
         // read the value of the game state
         game_state_ = state->state;
         RCLCPP_INFO(this->get_logger(), "GameState'%d'", game_state_);
+        if (game_state_ == 2)
+        {
+            angle = M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0; // generates random angle between 45 and 135
+            // set initial velocity values
+            velocity_x_ = cos(angle);
+            velocity_y_ = sin(angle);
+            current_x_ = window_width_ / 2;
+            current_y_ = window_height_ / 2;
+            game_state_ = 1; // set to in progress
+        }
+
+        if (game_state_ == 3)
+        {
+            angle = M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 + M_PI; // generates random angle between 225 and 315
+            // set initial velocity values
+            velocity_x_ = cos(angle);
+            velocity_y_ = sin(angle);
+            current_x_ = window_width_ / 2;
+            current_y_ = window_height_ / 2;
+            game_state_ = 1; // set to in progress
+        }
     }
 
     // Update based on what is coming from the collision detector
     void update_velocity(const geometry_msgs::msg::Point::SharedPtr velocity)
     {
+        // Update the velocity
         velocity_x_ = velocity->x;
         velocity_y_ = velocity->y;
+    }
+
+    void timer_callback()
+    {
 
         // make sure the velocity is a normal vector
         // Compute velocity magnitude
@@ -72,11 +100,9 @@ private:
         // update position
         current_x_ += ball_speed_ * velocity_x_ / velocity_magnitude;
         current_y_ += ball_speed_ * velocity_y_ / velocity_magnitude;
-    }
 
-    void timer_callback()
-    {
-
+        RCLCPP_INFO(this->get_logger(), "Ball position x: %d, y: %d", current_x_, current_y_);
+        RCLCPP_INFO(this->get_logger(), "Ball velocity x: %f, y: %f", velocity_x_, velocity_y_);
         // publish the position of the bar, its width and height
         auto message = custom_messages::msg::Ballstate();
 
@@ -91,6 +117,7 @@ private:
 
     void request_window_size()
     {
+
         // Wait for the service to be available
         while (!client_->wait_for_service(std::chrono::seconds(1)))
         {
@@ -114,7 +141,12 @@ private:
             // the bar dimensions and bar location initially depend on the window size
             current_y_ = window_height_ / 2;
             current_x_ = window_width_ / 2;
-            radius_ = window_width_*0.005;
+            radius_ = window_width_ * 0.005;
+            // at the start the ball can go either left or right
+            angle = M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 + (int)rand() % 2; // generates random angle between 45 and 135 degress and 225 and 315
+            // set initial velocity values
+            velocity_x_ = cos(angle);
+            velocity_y_ = sin(angle);
         }
         else
         {

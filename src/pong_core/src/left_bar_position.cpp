@@ -42,6 +42,7 @@ private:
     // client
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
 
+
     // Member variables to store current position and window size information
     float bar_spacing_;   // Spacing between the bar and the walls
     int bar_velocity_;    // set what is the speed of the bar
@@ -97,6 +98,12 @@ private:
     {
         // read the value of the game state
         game_state_ = state->state;
+        if (game_state_ == 2 || game_state_ == 3)
+        {
+            current_y_ = window_height_ / 2;
+            // Set the game state to in progress
+            game_state_ = 1;
+        }
         RCLCPP_INFO(this->get_logger(), "GameState'%d'", game_state_);
     }
 
@@ -106,8 +113,10 @@ private:
         auto message = custom_messages::msg::Barstate();
 
         message.y_position = current_y_;
+        message.x_position = current_x_;
         message.half_width = bar_half_height_;
         message.half_height = bar_half_width_;
+        // also add x position
 
         position_publisher_->publish(message);
 
@@ -117,7 +126,7 @@ private:
 
     void request_window_size()
     {
-        // Wait for the service to be available
+
         while (!client_->wait_for_service(std::chrono::seconds(1)))
         {
             if (!rclcpp::ok())
@@ -146,7 +155,7 @@ private:
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call service.");
         }
-    }
+        }
 
     std::shared_ptr<custom_messages::srv::Windowsize::Response> send_request(
         const std::shared_ptr<custom_messages::srv::Windowsize::Request> request)

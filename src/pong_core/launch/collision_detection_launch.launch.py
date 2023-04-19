@@ -5,6 +5,6 @@ def generate_launch_description():
     return launch.LaunchDescription([
         launch_ros.actions.Node(
             package='pong_core',
-            executable='window_size_publisher',
-            name='window_size_publisher'),
+            executable='collision_detection',
+            name='collision_detection'),
   ])

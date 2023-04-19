@@ -16,6 +16,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Barstate.msg"
   "msg/Ballstate.msg"
   "srv/Windowsize.srv"
+  "msg/Score.msg"
+  "msg/Scorevalue.msg"
   DEPENDENCIES geometry_msgs
 )
 
