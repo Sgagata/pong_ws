@@ -1,0 +1,8 @@
+CMake Error at /home/agata/ros2_humble/install/rosidl_cmake/share/rosidl_cmake/cmake/rosidl_generate_interfaces.cmake:93 (message):
+  rosidl_generate_interfaces() the passed file
+  'custom_messages/WindowSize.msg' doesn't exist relative to the
+  CMAKE_CURRENT_SOURCE_DIR '/home/agata/pong_ws/src/pong_core'
+Call Stack (most recent call first):
+  CMakeLists.txt:12 (rosidl_generate_interfaces)
+
+

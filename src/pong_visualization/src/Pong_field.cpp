@@ -91,8 +91,6 @@ void Pong_field::setFieldText(std::string s_)
  */
 void Pong_field::DrawField()
 {
-    int batCenter;
-
     sdl2_ui.clear(); // Clear the draw buffer. This calls SDL2_UI::clear.
 
     // We draw each element in a different color. This helps with debugging.

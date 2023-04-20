@@ -1,0 +1,17 @@
+/home/agata/pong_ws/src/install/key_input/lib/key_input/key_input
+/home/agata/pong_ws/src/install/key_input/share/key_input//launch/keyboard_input_launch.py
+/home/agata/pong_ws/src/install/key_input/share/ament_index/resource_index/package_run_dependencies/key_input
+/home/agata/pong_ws/src/install/key_input/share/ament_index/resource_index/parent_prefix_path/key_input
+/home/agata/pong_ws/src/install/key_input/share/key_input/environment/ament_prefix_path.sh
+/home/agata/pong_ws/src/install/key_input/share/key_input/environment/ament_prefix_path.dsv
+/home/agata/pong_ws/src/install/key_input/share/key_input/environment/path.sh
+/home/agata/pong_ws/src/install/key_input/share/key_input/environment/path.dsv
+/home/agata/pong_ws/src/install/key_input/share/key_input/local_setup.bash
+/home/agata/pong_ws/src/install/key_input/share/key_input/local_setup.sh
+/home/agata/pong_ws/src/install/key_input/share/key_input/local_setup.zsh
+/home/agata/pong_ws/src/install/key_input/share/key_input/local_setup.dsv
+/home/agata/pong_ws/src/install/key_input/share/key_input/package.dsv
+/home/agata/pong_ws/src/install/key_input/share/ament_index/resource_index/packages/key_input
+/home/agata/pong_ws/src/install/key_input/share/key_input/cmake/key_inputConfig.cmake
+/home/agata/pong_ws/src/install/key_input/share/key_input/cmake/key_inputConfig-version.cmake
+/home/agata/pong_ws/src/install/key_input/share/key_input/package.xml

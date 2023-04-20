@@ -1,0 +1,9 @@
+[0.000000] (-) TimerEvent: {}
+[0.000199] (-) JobUnselected: {'identifier': 'cam_input'}
+[0.000312] (-) JobUnselected: {'identifier': 'cpp_pubsub'}
+[0.000354] (-) JobUnselected: {'identifier': 'cv_bridge'}
+[0.000407] (-) JobUnselected: {'identifier': 'image_geometry'}
+[0.000452] (-) JobUnselected: {'identifier': 'opencv_tests'}
+[0.000503] (-) JobUnselected: {'identifier': 'pong_core'}
+[0.000528] (-) JobUnselected: {'identifier': 'vision_opencv'}
+[0.000543] (-) EventReactorShutdown: {}

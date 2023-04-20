@@ -1,0 +1,10 @@
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/install/strip.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/install/local.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/install.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/list_install_components.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/rebuild_cache.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/edit_cache.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/test.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/key_input.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/key_input_uninstall.dir
+/home/agata/pong_ws/src/build/key_input/CMakeFiles/uninstall.dir

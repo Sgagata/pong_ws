@@ -92,7 +92,6 @@ int main(int argc, char **argv)
     rclcpp::init(argc, argv);
     auto node = std::make_shared<PongVisualization>();
 
-    int frameCounter = 0;
     bool quit = false;
 
     while (!quit)

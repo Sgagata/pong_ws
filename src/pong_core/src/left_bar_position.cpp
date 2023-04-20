@@ -4,6 +4,7 @@
 #include "custom_messages/msg/barstate.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "custom_messages/srv/windowsize.hpp"
+#include "std_msgs/msg/int16.hpp"
 
 class LeftBarPosition : public rclcpp::Node
 {
@@ -16,6 +17,9 @@ public:
         // create subscriber for the game state
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
                                                                                             std::bind(&LeftBarPosition::game_state_callback, this, std::placeholders::_1));
+
+        keyboard_subsciber_ = this->create_subscription<std_msgs::msg::Int16>("/keyboard_input/key", 10,
+                                                                              std::bind(&LeftBarPosition::keyboard_callback, this, std::placeholders::_1));
 
         // publisher for the left bar status (y position, width and height)
         position_publisher_ = this->create_publisher<custom_messages::msg::Barstate>("left_bar_state", 10);
@@ -36,6 +40,7 @@ private:
     // for subscribing
     rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr position_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Gamestate>::SharedPtr game_state_subscriber_;
+    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr keyboard_subsciber_;
     // for publishing
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<custom_messages::msg::Barstate>::SharedPtr position_publisher_;
@@ -105,6 +110,21 @@ private:
             game_state_ = 1;
         }
         RCLCPP_INFO(this->get_logger(), "GameState'%d'", game_state_);
+    }
+
+    void keyboard_callback(const std_msgs::msg::Int16::SharedPtr key)
+    {
+        int new_y = current_y_;
+
+        if (key->data == 119)
+        {
+            new_y -= bar_velocity_;
+        }
+        else if (key->data == 115)
+        {
+            new_y += bar_velocity_;
+        }
+        current_y_ = new_y;
     }
 
     void timer_callback()
