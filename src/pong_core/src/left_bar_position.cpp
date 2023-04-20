@@ -32,7 +32,7 @@ public:
         client_ = this->create_client<custom_messages::srv::Windowsize>("get_window_size");
         request_window_size();
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&LeftBarPosition::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&LeftBarPosition::timer_callback, this));
     }
 
 private:
@@ -83,19 +83,8 @@ private:
         {
             new_y -= 2 * bar_velocity_;
         }
-        // cases that the bar does not leave the frame
-        //  full bar height = 2* bar_half_heigh_
-        if (new_y + bar_half_height_ > window_height_ - wall_height_)
-        {
-            new_y = window_height_ - bar_half_height_ - wall_height_;
-        }
 
-        if (new_y - bar_half_height_ < 0 + wall_height_)
-        {
-            new_y = bar_half_height_ + wall_height_;
-        }
-
-        current_y_ = new_y;
+        current_y_ = window_limit(new_y);
         RCLCPP_INFO(this->get_logger(), "CALC'%d'", current_y_);
     }
 
@@ -118,13 +107,31 @@ private:
 
         if (key->data == 119)
         {
-            new_y -= bar_velocity_;
+            new_y -= 4*bar_velocity_;
         }
         else if (key->data == 115)
         {
-            new_y += bar_velocity_;
+            new_y += 4*bar_velocity_;
         }
-        current_y_ = new_y;
+
+        current_y_ = window_limit(new_y);
+    }
+
+    int window_limit(int new_y)
+    {
+        // cases that the bar does not leave the frame
+        //  full bar height = 2* bar_half_heigh_
+        if (new_y + bar_half_height_ > window_height_ - wall_height_)
+        {
+            new_y = window_height_ - bar_half_height_ - wall_height_;
+        }
+
+        if (new_y - bar_half_height_ < 0 + wall_height_)
+        {
+            new_y = bar_half_height_ + wall_height_;
+        }
+
+        return new_y;
     }
 
     void timer_callback()
@@ -168,9 +175,9 @@ private:
             window_width_ = result->width;
             // the bar dimensions and bar location initially depend on the window size
             current_y_ = window_height_ / 2;
-            bar_half_height_ = window_height_ * 0.2;
+            bar_half_height_ = window_height_ * 0.1;
             bar_half_width_ = window_width_ * 0.02;
-            current_x_ = window_width_ * 0.1;
+            current_x_ = window_width_ * 0.01;
             wall_height_ = result->wallheight;
         }
         else

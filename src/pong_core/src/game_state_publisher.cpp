@@ -6,7 +6,7 @@
 class GameStatePublisher : public rclcpp::Node
 {
 public:
-  GameStatePublisher() : Node("Game_state_publisher"), count_(0)
+  GameStatePublisher() : Node("game_state_publisher"), count_(0)
   {
     // create a subsciber for the score
     score_subscriber_ = this->create_subscription<custom_messages::msg::Score>("score", 10,

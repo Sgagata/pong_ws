@@ -4,6 +4,7 @@
 #include "custom_messages/msg/barstate.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "custom_messages/srv/windowsize.hpp"
+#include "std_msgs/msg/int16.hpp"
 
 class RightBarPosition : public rclcpp::Node
 {
@@ -17,6 +18,9 @@ public:
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
                                                                                             std::bind(&RightBarPosition::game_state_callback, this, std::placeholders::_1));
 
+        keyboard_subsciber_ = this->create_subscription<std_msgs::msg::Int16>("/keyboard_input/key", 10,
+                                                                              std::bind(&RightBarPosition::keyboard_callback, this, std::placeholders::_1));
+
         // publisher for the right bar status (y position, width and height)
         position_publisher_ = this->create_publisher<custom_messages::msg::Barstate>("right_bar_state", 10);
 
@@ -28,7 +32,7 @@ public:
         client_ = this->create_client<custom_messages::srv::Windowsize>("get_window_size");
         request_window_size();
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&RightBarPosition::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&RightBarPosition::timer_callback, this));
     }
 
 private:
@@ -36,12 +40,13 @@ private:
     // for subscribing
     rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr position_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Gamestate>::SharedPtr game_state_subscriber_;
+    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr keyboard_subsciber_;
+
     // for publishing
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<custom_messages::msg::Barstate>::SharedPtr position_publisher_;
     // client
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
-
 
     // Member variables to store current position and window size information
     float bar_spacing_;   // Spacing between the bar and the walls
@@ -79,19 +84,9 @@ private:
         {
             new_y -= 2 * bar_velocity_;
         }
-        // cases that the bar does not leave the frame
-        //  full bar height = 2* bar_half_heigh_
-        if (new_y + bar_half_height_ > window_height_ - wall_height_)
-        {
-            new_y = window_height_ - bar_half_height_ - wall_height_;
-        }
 
-        if (new_y - bar_half_height_ < 0 + wall_height_)
-        {
-            new_y = bar_half_height_ + wall_height_;
-        }
+        current_y_ = window_limit(new_y);
 
-        current_y_ = new_y;
         RCLCPP_INFO(this->get_logger(), "CALC'%d'", current_y_);
     }
 
@@ -108,6 +103,39 @@ private:
         RCLCPP_INFO(this->get_logger(), "GameState'%d'", game_state_);
     }
 
+    void keyboard_callback(const std_msgs::msg::Int16::SharedPtr key)
+    {
+        int new_y = current_y_;
+
+        if (key->data == 105)
+        {
+            new_y -= 4 * bar_velocity_;
+        }
+        else if (key->data == 107)
+        {
+            new_y += 4 * bar_velocity_;
+        }
+
+        current_y_ = window_limit(new_y);
+    }
+
+    int window_limit(int new_y)
+    {
+        // cases that the bar does not leave the frame
+        //  full bar height = 2* bar_half_heigh_
+        if (new_y + bar_half_height_ > window_height_ - wall_height_)
+        {
+            new_y = window_height_ - bar_half_height_ - wall_height_;
+        }
+
+        if (new_y - bar_half_height_ < 0 + wall_height_)
+        {
+            new_y = bar_half_height_ + wall_height_;
+        }
+
+        return new_y;
+    }
+
     void timer_callback()
     {
         // publish the position of the bar, its width and height
@@ -120,7 +148,6 @@ private:
         // also add x position
 
         position_publisher_->publish(message);
-
     }
 
     void request_window_size()
@@ -147,16 +174,16 @@ private:
             window_width_ = result->width;
             // the bar dimensions and bar location initially depend on the window size
             current_y_ = window_height_ / 2;
-            bar_half_height_ = window_height_ * 0.2;
+            bar_half_height_ = window_height_ * 0.1;
             bar_half_width_ = window_width_ * 0.02;
-            current_x_ = window_width_ - window_width_*0.1;
+            current_x_ = window_width_ - window_width_ * 0.01;
             wall_height_ = result->wallheight;
         }
         else
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call service.");
         }
-        }
+    }
 
     std::shared_ptr<custom_messages::srv::Windowsize::Response> send_request(
         const std::shared_ptr<custom_messages::srv::Windowsize::Request> request)

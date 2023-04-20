@@ -42,19 +42,17 @@ public:
     Pong_field field;
 
 private:
+    // all the subscibers for updating the game window
     rclcpp::Subscription<custom_messages::msg::Ballstate>::SharedPtr ball_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Barstate>::SharedPtr left_bar_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Barstate>::SharedPtr right_bar_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Gamestate>::SharedPtr game_state_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Scorevalue>::SharedPtr score_subscriber_;
 
-    // Pong_field field;
-
     void ball_callback(const custom_messages::msg::Ballstate::SharedPtr ball)
     {
         field.setBallRadius(ball->radius);
         field.setXYBall(ball->position.x, ball->position.y);
-        RCLCPP_INFO(this->get_logger(), "Ball y = %d", ball->position.y);
     }
 
     void left_bar_callback(const custom_messages::msg::Barstate::SharedPtr left_bar)
@@ -73,7 +71,8 @@ private:
     }
     void game_state_callback(const custom_messages::msg::Gamestate::SharedPtr game_state)
     {
-        if(game_state->state == 0){
+        if (game_state->state == 0)
+        {
             field.setFieldText(std::string("Game Over"));
         }
     }
@@ -86,9 +85,6 @@ private:
 
 int main(int argc, char **argv)
 {
-    // Class under test
-    // Pong_field field;
-
     rclcpp::init(argc, argv);
     auto node = std::make_shared<PongVisualization>();
 
@@ -96,41 +92,8 @@ int main(int argc, char **argv)
 
     while (!quit)
     {
+        // update the callbacks
         rclcpp::spin_some(node);
-
-        RCLCPP_INFO(node->get_logger(), "Drawing");
-
-        // frameCounter++;
-        // if (frameCounter >= 1000)
-        // {
-        //     frameCounter = 0;
-        // }
-
-        // // Update the positions of the objects
-        // node->field.setYBatLeft(frameCounter);
-        // field.setYBatRight(100 - frameCounter);
-        // field.setXYBall(frameCounter, frameCounter / 2);
-
-        // // Update the text
-        // if (frameCounter % 100 == 0)
-        // {
-        //     // No need to set the values each time you call DrawField
-        //     if (frameCounter == 800)
-        //     {
-        //         // Any text
-        //         node->field.setFieldText(std::string("Game Over"));
-        //     }
-        //     else if (frameCounter == 900)
-        //     {
-        //         // Show no text
-        //         node->field.setFieldText(std::string(""));
-        //     }
-        //     else
-        //     {
-        //         // Show score
-        //         node->field.setFieldText(std::to_string(frameCounter / 100) + std::string(" - 0"));
-        //     }
-        //}
 
         // Show it on the screen
         node->field.DrawField();

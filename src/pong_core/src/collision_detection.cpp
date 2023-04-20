@@ -45,6 +45,8 @@ public:
         // publisher for score
         score_publisher_ = this->create_publisher<custom_messages::msg::Score>("score", 10);
 
+        max_angle_ = M_PI / 3;
+
         // Set up a client to request window size from the server
         client_ = this->create_client<custom_messages::srv::Windowsize>("get_window_size");
         request_window_size();
@@ -72,6 +74,7 @@ private:
     int window_height_; // Height of the window
     int ball_pos_prev_; // not to count double scores
     int wall_height_;
+    float max_angle_; // max angle with which the ball can bounce
 
     // for the declared structs
     Ball ball_;
@@ -205,12 +208,27 @@ private:
         // intialize the message for velocity
         auto velocity_message = geometry_msgs::msg::Point();
 
-        if (ball_collides_with_left_bar(ball_, left_bar_) || ball_collides_with_right_bar(ball_, right_bar_))
+        if (ball_collides_with_left_bar(ball_, left_bar_))
         {
+            // // case when the ball just bounces
+            // ball_.velocity.x = -ball_.velocity.x;
+            // case when the bounce place determines velocity
+            float intersect = left_bar_.position.y - ball_.position.y;
+            float normalize_intersect = intersect / (2 * left_bar_.half_height);
+            float angle = normalize_intersect * max_angle_;
+            velocity_message.x = cos(angle);
+            velocity_message.y = -sin(angle);
+            ball_veloctity_publisher_->publish(velocity_message);
+            RCLCPP_INFO(this->get_logger(), "Collides with bar");
+        }
 
-            ball_.velocity.x = -ball_.velocity.x;
-            velocity_message.x = ball_.velocity.x;
-            velocity_message.y = ball_.velocity.y;
+        if (ball_collides_with_right_bar(ball_, right_bar_))
+        {
+            float intersect = right_bar_.position.y - ball_.position.y;
+            float normalize_intersect = intersect / (2 * right_bar_.half_height);
+            float angle = normalize_intersect * max_angle_;
+            velocity_message.x = -cos(angle);
+            velocity_message.y = -sin(angle);
             ball_veloctity_publisher_->publish(velocity_message);
             RCLCPP_INFO(this->get_logger(), "Collides with bar");
         }
