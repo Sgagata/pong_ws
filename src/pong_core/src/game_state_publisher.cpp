@@ -34,7 +34,7 @@ private:
   // change only when new goal is scored and only publsih a
   void score_callback(const custom_messages::msg::Score::SharedPtr score)
   {
-        RCLCPP_INFO(this->get_logger(), "RECEIVED %d", score->score);
+    RCLCPP_INFO(this->get_logger(), "RECEIVED %d", score->score);
 
     if (score->score == 'L')
     {
@@ -49,6 +49,9 @@ private:
     if (score_right_ == 10 || score_left_ == 10)
     {
       game_state_ = 0;
+      // resets the score
+      score_right_ = 0;
+      score_left_ = 0;
     }
     RCLCPP_INFO(this->get_logger(), "The score %d, : %d", score_left_, score_right_);
 

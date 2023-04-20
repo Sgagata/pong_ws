@@ -41,7 +41,6 @@ private:
     // client
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
 
-
     // Member variables to store current position and window size information
     int current_x_;     // Current y-coordinate of the ball
     int current_y_;     // Current y-coordinate of the ball
@@ -72,7 +71,7 @@ private:
 
         if (game_state_ == 3)
         {
-            angle = M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 + M_PI; // generates random angle between 225 and 315
+            angle = 5 * M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 + M_PI; // generates random angle between 225 and 315
             // set initial velocity values
             velocity_x_ = cos(angle);
             velocity_y_ = sin(angle);
@@ -143,8 +142,8 @@ private:
             current_x_ = window_width_ / 2;
             radius_ = window_width_ * 0.005;
             // at the start the ball can go either left or right
-            angle = M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 + (int)rand() % 2; // generates random angle between 45 and 135 degress and 225 and 315
-            // set initial velocity values
+            //set the angle either between 45 and 135 or 225 and 315 degrees
+            angle = (int)rand() % 2 == 0 ? M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 : 5 * M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0; 
             velocity_x_ = cos(angle);
             velocity_y_ = sin(angle);
         }
