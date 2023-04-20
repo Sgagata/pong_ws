@@ -42,7 +42,6 @@ private:
     // client
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
 
-
     // Member variables to store current position and window size information
     float bar_spacing_;   // Spacing between the bar and the walls
     int bar_velocity_;    // set what is the speed of the bar
@@ -53,6 +52,7 @@ private:
     int bar_half_width_;  // width of the bar
     int window_width_;    // Width of the window
     int window_height_;   // Height of the window
+    int wall_height_;
 
     void position_callback(const geometry_msgs::msg::Point::SharedPtr msg)
     {
@@ -80,14 +80,14 @@ private:
         }
         // cases that the bar does not leave the frame
         //  full bar height = 2* bar_half_heigh_
-        if (new_y + bar_half_height_ > window_height_)
+        if (new_y + bar_half_height_ > window_height_ - wall_height_)
         {
-            new_y = window_height_ - bar_half_height_;
+            new_y = window_height_ - bar_half_height_ - wall_height_;
         }
 
-        if (new_y - bar_half_height_ < 0)
+        if (new_y - bar_half_height_ < 0 + wall_height_)
         {
-            new_y = bar_half_height_;
+            new_y = bar_half_height_ + wall_height_;
         }
 
         current_y_ = new_y;
@@ -114,14 +114,14 @@ private:
 
         message.y_position = current_y_;
         message.x_position = current_x_;
-        message.half_width = bar_half_height_;
-        message.half_height = bar_half_width_;
+        message.half_width = bar_half_width_;
+        message.half_height = bar_half_height_;
         // also add x position
 
         position_publisher_->publish(message);
 
-        RCLCPP_INFO(this->get_logger(), "Left_Height '%d'", this->window_height_);
-        RCLCPP_INFO(this->get_logger(), "Left_Curr_y '%d'", current_y_);
+        // RCLCPP_INFO(this->get_logger(), "Left_Height '%d'", this->window_height_);
+        // RCLCPP_INFO(this->get_logger(), "Left_Curr_y '%d'", current_y_);
     }
 
     void request_window_size()
@@ -142,7 +142,7 @@ private:
         auto result = send_request(request);
         if (result)
         {
-            RCLCPP_INFO(this->get_logger(), "Received response: %d", result->width);
+            RCLCPP_INFO(this->get_logger(), "Received response: %d", result->wallheight);
             // update the info based on the info from server
             window_height_ = result->height;
             window_width_ = result->width;
@@ -150,12 +150,14 @@ private:
             current_y_ = window_height_ / 2;
             bar_half_height_ = window_height_ * 0.2;
             bar_half_width_ = window_width_ * 0.02;
+            current_x_ = window_width_ * 0.1;
+            wall_height_ = result->wallheight;
         }
         else
         {
             RCLCPP_ERROR(this->get_logger(), "Failed to call service.");
         }
-        }
+    }
 
     std::shared_ptr<custom_messages::srv::Windowsize::Response> send_request(
         const std::shared_ptr<custom_messages::srv::Windowsize::Request> request)

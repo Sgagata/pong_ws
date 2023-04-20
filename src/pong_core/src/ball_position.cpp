@@ -24,9 +24,9 @@ public:
         position_publisher_ = this->create_publisher<custom_messages::msg::Ballstate>("ball_state", 10);
 
         // initial ball speed
-        ball_speed_ = 30;
+        ball_speed_ = 15;
         // also make publisher for that
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(1000), std::bind(&BallPosition::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&BallPosition::timer_callback, this));
     }
 
 private:
@@ -101,8 +101,8 @@ private:
         current_x_ += ball_speed_ * velocity_x_ / velocity_magnitude;
         current_y_ += ball_speed_ * velocity_y_ / velocity_magnitude;
 
-        RCLCPP_INFO(this->get_logger(), "Ball position x: %d, y: %d", current_x_, current_y_);
-        RCLCPP_INFO(this->get_logger(), "Ball velocity x: %f, y: %f", velocity_x_, velocity_y_);
+        // RCLCPP_INFO(this->get_logger(), "Ball position x: %d, y: %d", current_x_, current_y_);
+        // RCLCPP_INFO(this->get_logger(), "Ball velocity x: %f, y: %f", velocity_x_, velocity_y_);
         // publish the position of the bar, its width and height
         auto message = custom_messages::msg::Ballstate();
 

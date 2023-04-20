@@ -53,6 +53,7 @@ private:
     int bar_half_width_;  // width of the bar
     int window_width_;    // Width of the window
     int window_height_;   // Height of the window
+    int wall_height_;
 
     void position_callback(const geometry_msgs::msg::Point::SharedPtr msg)
     {
@@ -80,14 +81,14 @@ private:
         }
         // cases that the bar does not leave the frame
         //  full bar height = 2* bar_half_heigh_
-        if (new_y + bar_half_height_ > window_height_)
+        if (new_y + bar_half_height_ > window_height_ - wall_height_)
         {
-            new_y = window_height_ - bar_half_height_;
+            new_y = window_height_ - bar_half_height_ - wall_height_;
         }
 
-        if (new_y - bar_half_height_ < 0)
+        if (new_y - bar_half_height_ < 0 + wall_height_)
         {
-            new_y = bar_half_height_;
+            new_y = bar_half_height_ + wall_height_;
         }
 
         current_y_ = new_y;
@@ -114,8 +115,8 @@ private:
 
         message.y_position = current_y_;
         message.x_position = current_x_;
-        message.half_width = bar_half_height_;
-        message.half_height = bar_half_width_;
+        message.half_width = bar_half_width_;
+        message.half_height = bar_half_height_;
         // also add x position
 
         position_publisher_->publish(message);
@@ -148,6 +149,8 @@ private:
             current_y_ = window_height_ / 2;
             bar_half_height_ = window_height_ * 0.2;
             bar_half_width_ = window_width_ * 0.02;
+            current_x_ = window_width_ - window_width_*0.1;
+            wall_height_ = result->wallheight;
         }
         else
         {

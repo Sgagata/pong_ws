@@ -1,4 +1,5 @@
 // this part of the code was written to check whether the light position detection works properly
+//inlcude .vscode for the includes - it makes
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"

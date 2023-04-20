@@ -8,22 +8,22 @@
 // what will be used to handle collisions instead of having varibles
 struct Vector2D
 {
-    double x;
-    double y;
+    float x;
+    float y;
 };
 
 struct Ball
 {
     Vector2D position;
     Vector2D velocity;
-    double radius;
+    int radius;
 };
 
 struct Bar
 {
     Vector2D position;
-    double half_width;
-    double half_height;
+    int half_width;
+    int half_height;
 };
 
 class CollisionDetection : public rclcpp::Node
@@ -35,8 +35,8 @@ public:
         left_bar_state_subscriber_ = this->create_subscription<custom_messages::msg::Barstate>("left_bar_state", 10,
                                                                                                std::bind(&CollisionDetection::left_bar_state_callback, this, std::placeholders::_1));
 
-        // right_bar_state_subscriber_ = this->create_subscription<custom_messages::msg::Barstate>("right_bar_state", 10,
-        //                                                                                        std::bind(&CollisionDetection::right_bar_state_callback, this, std::placeholders::_1));
+        right_bar_state_subscriber_ = this->create_subscription<custom_messages::msg::Barstate>("right_bar_state", 10,
+                                                                                                std::bind(&CollisionDetection::right_bar_state_callback, this, std::placeholders::_1));
         // subscirber for ball position
         ball_state_subscriber_ = this->create_subscription<custom_messages::msg::Ballstate>("ball_state", 10,
                                                                                             std::bind(&CollisionDetection::ball_state_callback, this, std::placeholders::_1));
@@ -49,7 +49,7 @@ public:
         client_ = this->create_client<custom_messages::srv::Windowsize>("get_window_size");
         request_window_size();
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(1000), std::bind(&CollisionDetection::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&CollisionDetection::timer_callback, this));
     }
 
 private:
@@ -71,7 +71,7 @@ private:
     int window_width_;  // Width of the window
     int window_height_; // Height of the window
     int ball_pos_prev_; // not to count double scores
-
+    int wall_height_;
 
     // for the declared structs
     Ball ball_;
@@ -113,8 +113,8 @@ private:
         // Check if the ball's position is within the boundaries of the bar
         if (ball.position.y > bar.position.y - bar.half_height - ball.radius &&
             ball.position.y < bar.position.y + bar.half_height + ball.radius &&
-            ball.position.x >= bar.position.x - bar.half_width - ball.radius &&
-            ball.position.x > bar.position.x + bar.half_width + ball.radius &&
+            ball.position.x >= bar.position.x - ball.radius &&
+            ball.position.x <= bar.position.x + bar.half_width + ball.radius &&
             ball.velocity.x < 0 && ball.position.x < window_width_ / 2)
         {
             // Ball collided with the bar
@@ -133,7 +133,7 @@ private:
         if (ball.position.y > bar.position.y - bar.half_height - ball.radius &&
             ball.position.y < bar.position.y + bar.half_height + ball.radius &&
             ball.position.x >= bar.position.x - bar.half_width - ball.radius &&
-            ball.position.x > bar.position.x + bar.half_width + ball.radius &&
+            ball.position.x <= bar.position.x + ball.radius &&
             ball.velocity.x > 0 && ball.position.x > window_width_ / 2)
         {
             // Ball collided with the bar
@@ -145,11 +145,26 @@ private:
         }
     }
 
-    bool ball_collides_with_window(const Ball &ball)
+    bool ball_collides_with_window_bottom(const Ball &ball)
     {
         // Check if the ball's touched the top or the bottom of the screen
-        if (ball.position.y <= 0 + ball.radius || ball.position.y >= window_height_ - ball.radius)
+        if (ball.position.y >= window_height_ - ball.radius - wall_height_ && ball.velocity.y > 0)
         {
+            // Ball collided with the bar
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool ball_collides_with_window_top(const Ball &ball)
+    {
+        // Check if the ball's touched the top or the bottom of the screen
+        if (ball.position.y <= 0 + ball.radius + wall_height_ && ball.velocity.y < 0)
+        {
+
             // Ball collided with the bar
             return true;
         }
@@ -162,7 +177,7 @@ private:
     bool ball_exits_the_window_left(const Ball &ball)
     {
         // Check if the left the screen on the left
-        if (ball.position.x <= 0 - ball.radius)
+        if (ball.position.x <= 0 - ball.radius && ball.velocity.x != 0 && ball.velocity.y != 0)
         {
             return true;
         }
@@ -175,7 +190,7 @@ private:
     bool ball_exits_the_window_right(const Ball &ball)
     {
         // Check if the left the screen on the right
-        if (ball.position.x >= window_width_ + ball.radius)
+        if (ball.position.x >= window_width_ + ball.radius && ball.velocity.x != 0 && ball.velocity.y != 0)
         {
             return true;
         }
@@ -187,40 +202,51 @@ private:
 
     void collision_handler()
     {
-        // intialize the message for colliion
+        // intialize the message for velocity
+        auto velocity_message = geometry_msgs::msg::Point();
 
         if (ball_collides_with_left_bar(ball_, left_bar_) || ball_collides_with_right_bar(ball_, right_bar_))
         {
-            auto velocity_message = geometry_msgs::msg::Point();
 
             ball_.velocity.x = -ball_.velocity.x;
             velocity_message.x = ball_.velocity.x;
             velocity_message.y = ball_.velocity.y;
             ball_veloctity_publisher_->publish(velocity_message);
+            RCLCPP_INFO(this->get_logger(), "Collides with bar");
         }
 
-        if (ball_collides_with_window(ball_))
+        if (ball_collides_with_window_top(ball_) || ball_collides_with_window_bottom(ball_))
         {
-            auto velocity_message = geometry_msgs::msg::Point();
 
             ball_.velocity.y = -ball_.velocity.y;
             velocity_message.x = ball_.velocity.x;
             velocity_message.y = ball_.velocity.y;
             ball_veloctity_publisher_->publish(velocity_message);
+            RCLCPP_INFO(this->get_logger(), "Collides with wall");
         }
 
         if (ball_exits_the_window_left(ball_))
         {
+            // stop the ball after the goal
+            velocity_message.x = 0;
+            velocity_message.y = 0;
+            ball_veloctity_publisher_->publish(velocity_message);
+
             auto score_message = custom_messages::msg::Score();
             // the right player scored
             score_message.score = 'R';
-            RCLCPP_INFO(this->get_logger(), "Left right");
+            RCLCPP_INFO(this->get_logger(), "Right scored");
 
             score_publisher_->publish(score_message);
         }
 
         if (ball_exits_the_window_right(ball_))
         {
+            // stop the ball after the goal
+            velocity_message.x = 0;
+            velocity_message.y = 0;
+            ball_veloctity_publisher_->publish(velocity_message);
+
             auto score_message = custom_messages::msg::Score();
             // the left player scored
             score_message.score = 'L';
@@ -252,6 +278,10 @@ private:
             // update the info based on the info from server
             window_height_ = result->height;
             window_width_ = result->width;
+            wall_height_ = result->wallheight;
+            // initialize the ball as stationary
+            ball_.velocity.y = 0;
+            ball_.velocity.y = 0;
         }
         else
         {

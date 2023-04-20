@@ -41,7 +41,7 @@ private:
         cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
 
         //threhold for dectecting light pixels
-        int lower_threshold = 230;
+        int lower_threshold = 250;
         int upper_threshold = 255;
 
         int image_width = image.cols;
