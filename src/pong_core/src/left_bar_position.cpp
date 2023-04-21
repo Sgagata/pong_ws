@@ -11,8 +11,11 @@ class LeftBarPosition : public rclcpp::Node
 public:
     LeftBarPosition() : Node("left_bar_position"), count_(0)
     {
-        // create subscriber for the position of the bar given by light
-        position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("terminal_input", 10,
+        // create subscriber for the position of the bar given by terminal for testing
+        // position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("terminal_input", 10,
+        //                                                                             std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
+        // create subsciber for position given by the light
+        position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("left_light_position", 10,
                                                                                     std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
         // create subscriber for the game state
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,

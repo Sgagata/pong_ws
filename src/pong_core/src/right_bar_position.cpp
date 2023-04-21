@@ -11,21 +11,24 @@ class RightBarPosition : public rclcpp::Node
 public:
     RightBarPosition() : Node("right_bar_position"), count_(0)
     {
-        // create subscriber for the position of the bar given by light
-        position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("terminal_input", 10,
+        // create subscriber for the position of the bar given by terminal
+        // position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("terminal_input", 10,
+        //                                                                             std::bind(&RightBarPosition::position_callback, this, std::placeholders::_1));
+
+        // create subsciber for position given by the light
+        position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("right_light_position", 10,
                                                                                     std::bind(&RightBarPosition::position_callback, this, std::placeholders::_1));
         // create subscriber for the game state
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
                                                                                             std::bind(&RightBarPosition::game_state_callback, this, std::placeholders::_1));
-
+        // create subsciber for the keyboard input
         keyboard_subsciber_ = this->create_subscription<std_msgs::msg::Int16>("/keyboard_input/key", 10,
                                                                               std::bind(&RightBarPosition::keyboard_callback, this, std::placeholders::_1));
 
         // publisher for the right bar status (y position, width and height)
         position_publisher_ = this->create_publisher<custom_messages::msg::Barstate>("right_bar_state", 10);
 
-        // this could also be in server i think
-        bar_spacing_ = 0.02;
+        // declare bar velocity
         bar_velocity_ = 5;
 
         // Set up a client to request window size from the server
@@ -49,7 +52,6 @@ private:
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
 
     // Member variables to store current position and window size information
-    float bar_spacing_;   // Spacing between the bar and the walls
     int bar_velocity_;    // set what is the speed of the bar
     int current_x_;       // Current y-coordinate of the bar
     int current_y_;       // Current y-coordinate of the bar
@@ -66,8 +68,8 @@ private:
         int new_y = current_y_;
         RCLCPP_INFO(this->get_logger(), "Point '%f'", msg->y);
 
-        // steering if the light is above half move up otherwise move down - the light point comes between 0 and 1
-        // the more far away the light is the faster the bar moves
+        // steering: if the light is above half move up otherwise move down - the light point comes in between 0 and 1
+        // the more far away the light is from the middle the faster the bar moves
         if (msg->y > 0.8)
         {
             new_y += 2 * bar_velocity_;
@@ -102,16 +104,16 @@ private:
         }
         RCLCPP_INFO(this->get_logger(), "GameState'%d'", game_state_);
     }
-
+    // update bar position based on the pressed keys
     void keyboard_callback(const std_msgs::msg::Int16::SharedPtr key)
     {
         int new_y = current_y_;
 
-        if (key->data == 105)
+        if (key->data == 105) //"i"
         {
             new_y -= 4 * bar_velocity_;
         }
-        else if (key->data == 107)
+        else if (key->data == 107) //"k"
         {
             new_y += 4 * bar_velocity_;
         }
@@ -145,7 +147,6 @@ private:
         message.x_position = current_x_;
         message.half_width = bar_half_width_;
         message.half_height = bar_half_height_;
-        // also add x position
 
         position_publisher_->publish(message);
     }
@@ -164,7 +165,6 @@ private:
         }
         // Send a request to the service
         auto request = std::make_shared<custom_messages::srv::Windowsize::Request>();
-        // request->a = 5; // Set the request value to 5
         auto result = send_request(request);
         if (result)
         {

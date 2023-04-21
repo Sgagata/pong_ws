@@ -12,7 +12,7 @@ public:
     LightPosition() : Node("light_position"), count_(0) 
     {
         //create publsiher for the light position on the left and right side of the screen
-        left_publisher_ = this->create_publisher<geometry_msgs::msg::Point>("left_light_position", 10);
+        left_publisher_ = this->create_publisher<geometry_msgs::msg::Point>(" \t", 10);
         right_publisher_ = this->create_publisher<geometry_msgs::msg::Point>("right_light_position", 10);
         
         //use the ready cam2image node
@@ -21,13 +21,13 @@ public:
     }
 
 private:
-
+    //define all the publisher and subscibers
     rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr left_publisher_;
     rclcpp::Publisher<geometry_msgs::msg::Point>::SharedPtr right_publisher_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr image_subscriber_;
     size_t count_;
 
-
+ 
     void image_callback(const sensor_msgs::msg::Image::SharedPtr msg){
 
         //get ROS2 image to open CV format
