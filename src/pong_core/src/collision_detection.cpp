@@ -80,7 +80,6 @@ private:
     // for the "top" and "bottom" of the screen collisions
     int window_width_;  // Width of the window
     int window_height_; // Height of the window
-    int ball_pos_prev_; // not to count double scores
     int wall_height_;
     float max_angle_; // max angle with which the ball can bounce
 

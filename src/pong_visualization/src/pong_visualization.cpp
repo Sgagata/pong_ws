@@ -18,6 +18,7 @@
 #include "custom_messages/msg/gamestate.hpp"
 #include "custom_messages/msg/scorevalue.hpp"
 
+/// @brief 
 class PongVisualization : public rclcpp::Node
 {
 public:
