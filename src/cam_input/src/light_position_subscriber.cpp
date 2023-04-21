@@ -1,6 +1,10 @@
-// this part of the code was written to check whether the light position detection works properly
-// inlcude .vscode for the includes - it makes
-
+//==============================================================
+// Filename : light_position_subscriber.cpp
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22
+// License: N.A. or open source license like LGPL
+// Description : Show the detected center of gravity for left and right light
+//==============================================================
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include <opencv2/opencv.hpp>

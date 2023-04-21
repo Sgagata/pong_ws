@@ -1,3 +1,10 @@
+//==============================================================
+// Filename : 
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22 
+// License: N.A. or open source license like LGPL
+// Description :
+//==============================================================
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/srv/windowsize.hpp"
 

@@ -1,3 +1,10 @@
+//==============================================================
+// Filename : right_bar_position.cpp
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22
+// License: N.A. or open source license like LGPL
+// Description : Updates the position of the right bar
+//==============================================================
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/msg/windowsize.hpp"
 #include "custom_messages/msg/gamestate.hpp"

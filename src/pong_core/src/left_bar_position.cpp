@@ -1,3 +1,10 @@
+//==============================================================
+// Filename : 
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22 
+// License: N.A. or open source license like LGPL
+// Description :
+//==============================================================
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/msg/windowsize.hpp"
 #include "custom_messages/msg/gamestate.hpp"
@@ -28,7 +35,6 @@ public:
         position_publisher_ = this->create_publisher<custom_messages::msg::Barstate>("left_bar_state", 10);
 
         // this could also be in server i think
-        bar_spacing_ = 0.02;
         bar_velocity_ = 5;
 
         // Set up a client to request window size from the server
@@ -51,7 +57,6 @@ private:
     rclcpp::Client<custom_messages::srv::Windowsize>::SharedPtr client_;
 
     // Member variables to store current position and window size information
-    float bar_spacing_;   // Spacing between the bar and the walls
     int bar_velocity_;    // set what is the speed of the bar
     int current_x_;       // Current y-coordinate of the bar
     int current_y_;       // Current y-coordinate of the bar
@@ -110,11 +115,11 @@ private:
 
         if (key->data == 119)
         {
-            new_y -= 4*bar_velocity_;
+            new_y -= 4 * bar_velocity_;
         }
         else if (key->data == 115)
         {
-            new_y += 4*bar_velocity_;
+            new_y += 4 * bar_velocity_;
         }
 
         current_y_ = window_limit(new_y);

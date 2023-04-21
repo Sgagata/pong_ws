@@ -1,3 +1,11 @@
+//==============================================================
+// Filename : collision_detection.cpp
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22
+// License: N.A. or open source license like LGPL
+// Description : Check for collision in the game, updates the ball velocity, notifies about scores
+//==============================================================
+
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/msg/ballstate.hpp"
 #include "custom_messages/msg/barstate.hpp"

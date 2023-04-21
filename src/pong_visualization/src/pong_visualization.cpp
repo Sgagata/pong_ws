@@ -1,8 +1,9 @@
 //==============================================================
-// Filename    : example.cpp
-// Authors     : Gijs van Oort
-// License     : N.A.
-// Description : Example for the Pong_field class
+// Filename : pong_visualization.cppz
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22
+// License: N.A. or open source license like LGPL
+// Description : Provides a visualization of the game
 //==============================================================
 
 #include <iostream>

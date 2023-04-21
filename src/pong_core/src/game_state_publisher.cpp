@@ -1,3 +1,11 @@
+//==============================================================
+// Filename : game_state_publsiher.cpp
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22
+// License: N.A. or open source license like LGPL
+// Description : Updates the score and the state of the game
+//==============================================================
+
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/msg/gamestate.hpp"
 #include "custom_messages/msg/score.hpp"
@@ -11,7 +19,7 @@ public:
     // create a subsciber for the score
     score_subscriber_ = this->create_subscription<custom_messages::msg::Score>("score", 10,
                                                                                std::bind(&GameStatePublisher::score_callback, this, std::placeholders::_1));
-    // create publisher for game state
+    // create publisher for game state and score value
     game_state_publisher_ = this->create_publisher<custom_messages::msg::Gamestate>("game_state", 10);
 
     score_publisher_ = this->create_publisher<custom_messages::msg::Scorevalue>("score_value", 10);
@@ -31,17 +39,16 @@ private:
   int score_right_;
   int game_state_;
 
-  // change only when new goal is scored and only publsih a
+  // change and publsih  only when new goal is scored
   void score_callback(const custom_messages::msg::Score::SharedPtr score)
   {
-    RCLCPP_INFO(this->get_logger(), "RECEIVED %d", score->score);
-
+    // left player scored
     if (score->score == 'L')
     {
       score_left_ += 1;
       game_state_ = 2;
     }
-    else if (score->score == 'R')
+    else if (score->score == 'R') // right player scored
     {
       score_right_ += 1;
       game_state_ = 3;
@@ -53,8 +60,7 @@ private:
       score_right_ = 0;
       score_left_ = 0;
     }
-    RCLCPP_INFO(this->get_logger(), "The score %d, : %d", score_left_, score_right_);
-
+    // publish the updated information
     auto game_state_message = custom_messages::msg::Gamestate();
 
     game_state_message.state = game_state_;

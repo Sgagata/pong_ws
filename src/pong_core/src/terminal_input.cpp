@@ -1,4 +1,10 @@
-//get the input from the terminal to move the bar
+//==============================================================
+// Filename : terminal_input.cpp
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22
+// License: N.A. or open source license like LGPL
+// Description : Used for simulating user input
+//==============================================================
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include <iostream>
@@ -29,13 +35,16 @@ private:
 
     // Convert input to a double
     double y;
-    try {
+    try
+    {
       y = std::stod(input);
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
       // Invalid input, ignore
       return;
     }
-
+    // publsih the message
     auto message = geometry_msgs::msg::Point();
     message.x = 1.0;
     message.y = y;

@@ -1,3 +1,11 @@
+//==============================================================
+// Filename : ball_position.cpp
+// Authors : Franka van Jaarsveld, Agata Sowa
+// Group : 22
+// License: N.A. or open source license like LGPL
+// Description : Updates the position of ball in the pong game
+//==============================================================
+
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/msg/gamestate.hpp"
 #include "custom_messages/msg/ballstate.hpp"
@@ -13,7 +21,7 @@ public:
         // create subscriber for the game state
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
                                                                                             std::bind(&BallPosition::game_state_callback, this, std::placeholders::_1));
-
+        // create subscriber for the velocty value coming from the collision detection
         velocity_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("collision_velocity", 10, std::bind(&BallPosition::update_velocity, this, std::placeholders::_1));
 
         // Set up a client to request window size from the server
@@ -100,8 +108,6 @@ private:
         current_x_ += ball_speed_ * velocity_x_ / velocity_magnitude;
         current_y_ += ball_speed_ * velocity_y_ / velocity_magnitude;
 
-        // RCLCPP_INFO(this->get_logger(), "Ball position x: %d, y: %d", current_x_, current_y_);
-        // RCLCPP_INFO(this->get_logger(), "Ball velocity x: %f, y: %f", velocity_x_, velocity_y_);
         // publish the position of the bar, its width and height
         auto message = custom_messages::msg::Ballstate();
 
@@ -142,8 +148,8 @@ private:
             current_x_ = window_width_ / 2;
             radius_ = window_width_ * 0.005;
             // at the start the ball can go either left or right
-            //set the angle either between 45 and 135 or 225 and 315 degrees
-            angle = (int)rand() % 2 == 0 ? M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 : 5 * M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0; 
+            // set the angle either between 45 and 135 or 225 and 315 degrees
+            angle = (int)rand() % 2 == 0 ? M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0 : 5 * M_PI / 4.0 + (double)rand() / RAND_MAX * M_PI / 2.0;
             velocity_x_ = cos(angle);
             velocity_y_ = sin(angle);
         }
