@@ -32,7 +32,7 @@ public:
         position_publisher_ = this->create_publisher<custom_messages::msg::Ballstate>("ball_state", 10);
 
         // initial ball speed
-        ball_speed_ = 15;
+        ball_speed_ = 20;
         // also make publisher for that
         timer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&BallPosition::timer_callback, this));
     }

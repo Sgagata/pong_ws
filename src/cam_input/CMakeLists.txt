@@ -39,6 +39,11 @@ target_include_directories(light_position_subscriber  PRIVATE ${OpenCV_INCLUDE_D
 ament_target_dependencies(light_position_subscriber rclcpp sensor_msgs geometry_msgs)
 target_link_libraries(light_position_subscriber ${OpenCV_LIBS})
 
+
+add_executable(light_plotter src/light_plotter.cpp)
+# target_include_directories(light_position_subscriber  PRIVATE ${OpenCV_INCLUDE_DIRS})
+ament_target_dependencies(light_plotter rclcpp geometry_msgs)
+
 # Install executable
 install(TARGETS
   light_position
@@ -46,6 +51,10 @@ install(TARGETS
 
 install(TARGETS
   light_position_subscriber
+  DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+  light_plotter
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files
