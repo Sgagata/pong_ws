@@ -1,55 +1,48 @@
 //==============================================================
-// Filename : left_bar_position.cpp
+// Filename : right_bar_position_key.cpp
 // Authors : Franka van Jaarsveld, Agata Sowa
-// Group : 22 
+// Group : 22
 // License: N.A. or open source license like LGPL
-// Description : Updates the position of the left bar
+// Description : Updates the position of the right bar, accesses only the keyboard input
 //==============================================================
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/msg/windowsize.hpp"
 #include "custom_messages/msg/gamestate.hpp"
 #include "custom_messages/msg/barstate.hpp"
-#include "geometry_msgs/msg/point.hpp"
 #include "custom_messages/srv/windowsize.hpp"
 #include "std_msgs/msg/int16.hpp"
 
-class LeftBarPosition : public rclcpp::Node
+class RightBarPosition : public rclcpp::Node
 {
 public:
-    LeftBarPosition() : Node("left_bar_position"), count_(0)
+    RightBarPosition() : Node("right_bar_position"), count_(0)
     {
-        // create subscriber for the position of the bar given by terminal for testing
-        // position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("terminal_input", 10,
-        //                                                                             std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
-        // create subsciber for position given by the light
-        position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("left_light_position", 10,
-                                                                                    std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
         // create subscriber for the game state
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
-                                                                                            std::bind(&LeftBarPosition::game_state_callback, this, std::placeholders::_1));
-
+                                                                                            std::bind(&RightBarPosition::game_state_callback, this, std::placeholders::_1));
+        // create subsciber for the keyboard input
         keyboard_subsciber_ = this->create_subscription<std_msgs::msg::Int16>("/keyboard_input/key", 10,
-                                                                              std::bind(&LeftBarPosition::keyboard_callback, this, std::placeholders::_1));
+                                                                              std::bind(&RightBarPosition::keyboard_callback, this, std::placeholders::_1));
 
-        // publisher for the left bar status (y position, width and height)
-        position_publisher_ = this->create_publisher<custom_messages::msg::Barstate>("left_bar_state", 10);
+        // publisher for the right bar status (y position, width and height)
+        position_publisher_ = this->create_publisher<custom_messages::msg::Barstate>("right_bar_state", 10);
 
-        // this could also be in server i think
+        // declare bar velocity
         bar_velocity_ = 5;
 
         // Set up a client to request window size from the server
         client_ = this->create_client<custom_messages::srv::Windowsize>("get_window_size");
         request_window_size();
 
-        timer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&LeftBarPosition::timer_callback, this));
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(50), std::bind(&RightBarPosition::timer_callback, this));
     }
 
 private:
     size_t count_;
     // for subscribing
-    rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr position_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Gamestate>::SharedPtr game_state_subscriber_;
     rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr keyboard_subsciber_;
+
     // for publishing
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<custom_messages::msg::Barstate>::SharedPtr position_publisher_;
@@ -67,35 +60,6 @@ private:
     int window_height_;   // Height of the window
     int wall_height_;
 
-    void position_callback(const geometry_msgs::msg::Point::SharedPtr msg)
-    {
-        // new_y intialized as current on will be changed through this void
-        int new_y = current_y_;
-        RCLCPP_INFO(this->get_logger(), "Point '%f'", msg->y);
-
-        // steering if the light is above half move up otherwise move down - the light point comes between 0 and 1
-        // the more far away the light is the faster the bar moves
-        if (msg->y > 0.8)
-        {
-            new_y += 2 * bar_velocity_;
-        }
-        else if (msg->y > 0.6 && msg->y <= 0.8)
-        {
-            new_y += bar_velocity_;
-        }
-        else if (msg->y > 0.2 && msg->y <= 0.4)
-        {
-            new_y -= bar_velocity_;
-        }
-        else if (msg->y <= 0.2)
-        {
-            new_y -= 2 * bar_velocity_;
-        }
-
-        current_y_ = window_limit(new_y);
-        RCLCPP_INFO(this->get_logger(), "CALC'%d'", current_y_);
-    }
-
     void game_state_callback(const custom_messages::msg::Gamestate::SharedPtr state)
     {
         // read the value of the game state
@@ -108,16 +72,16 @@ private:
         }
         RCLCPP_INFO(this->get_logger(), "GameState'%d'", game_state_);
     }
-
+    // update bar position based on the pressed keys
     void keyboard_callback(const std_msgs::msg::Int16::SharedPtr key)
     {
         int new_y = current_y_;
 
-        if (key->data == 119)
+        if (key->data == 105) //"i"
         {
             new_y -= 4 * bar_velocity_;
         }
-        else if (key->data == 115)
+        else if (key->data == 107) //"k"
         {
             new_y += 4 * bar_velocity_;
         }
@@ -151,12 +115,8 @@ private:
         message.x_position = current_x_;
         message.half_width = bar_half_width_;
         message.half_height = bar_half_height_;
-        // also add x position
 
         position_publisher_->publish(message);
-
-        // RCLCPP_INFO(this->get_logger(), "Left_Height '%d'", this->window_height_);
-        // RCLCPP_INFO(this->get_logger(), "Left_Curr_y '%d'", current_y_);
     }
 
     void request_window_size()
@@ -173,11 +133,10 @@ private:
         }
         // Send a request to the service
         auto request = std::make_shared<custom_messages::srv::Windowsize::Request>();
-        // request->a = 5; // Set the request value to 5
         auto result = send_request(request);
         if (result)
         {
-            RCLCPP_INFO(this->get_logger(), "Received response: %d", result->wallheight);
+            RCLCPP_INFO(this->get_logger(), "Received response: %d", result->width);
             // update the info based on the info from server
             window_height_ = result->height;
             window_width_ = result->width;
@@ -185,7 +144,7 @@ private:
             current_y_ = window_height_ / 2;
             bar_half_height_ = window_height_ * 0.1;
             bar_half_width_ = window_width_ * 0.02;
-            current_x_ = window_width_ * 0.01;
+            current_x_ = window_width_ - window_width_ * 0.01;
             wall_height_ = result->wallheight;
         }
         else
@@ -213,7 +172,7 @@ private:
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<LeftBarPosition>());
+    rclcpp::spin(std::make_shared<RightBarPosition>());
     rclcpp::shutdown();
     return 0;
 }

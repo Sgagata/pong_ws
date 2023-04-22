@@ -1,9 +1,9 @@
 //==============================================================
-// Filename : left_bar_position.cpp
+// Filename : left_bar_position_light.cpp
 // Authors : Franka van Jaarsveld, Agata Sowa
 // Group : 22 
 // License: N.A. or open source license like LGPL
-// Description : Updates the position of the left bar
+// Description : Updates left bar position using only light
 //==============================================================
 #include "rclcpp/rclcpp.hpp"
 #include "custom_messages/msg/windowsize.hpp"
@@ -18,18 +18,12 @@ class LeftBarPosition : public rclcpp::Node
 public:
     LeftBarPosition() : Node("left_bar_position"), count_(0)
     {
-        // create subscriber for the position of the bar given by terminal for testing
-        // position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("terminal_input", 10,
-        //                                                                             std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
         // create subsciber for position given by the light
         position_subscriber_ = this->create_subscription<geometry_msgs::msg::Point>("left_light_position", 10,
                                                                                     std::bind(&LeftBarPosition::position_callback, this, std::placeholders::_1));
         // create subscriber for the game state
         game_state_subscriber_ = this->create_subscription<custom_messages::msg::Gamestate>("game_state", 10,
                                                                                             std::bind(&LeftBarPosition::game_state_callback, this, std::placeholders::_1));
-
-        keyboard_subsciber_ = this->create_subscription<std_msgs::msg::Int16>("/keyboard_input/key", 10,
-                                                                              std::bind(&LeftBarPosition::keyboard_callback, this, std::placeholders::_1));
 
         // publisher for the left bar status (y position, width and height)
         position_publisher_ = this->create_publisher<custom_messages::msg::Barstate>("left_bar_state", 10);
@@ -49,7 +43,6 @@ private:
     // for subscribing
     rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr position_subscriber_;
     rclcpp::Subscription<custom_messages::msg::Gamestate>::SharedPtr game_state_subscriber_;
-    rclcpp::Subscription<std_msgs::msg::Int16>::SharedPtr keyboard_subsciber_;
     // for publishing
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<custom_messages::msg::Barstate>::SharedPtr position_publisher_;
@@ -109,21 +102,6 @@ private:
         RCLCPP_INFO(this->get_logger(), "GameState'%d'", game_state_);
     }
 
-    void keyboard_callback(const std_msgs::msg::Int16::SharedPtr key)
-    {
-        int new_y = current_y_;
-
-        if (key->data == 119)
-        {
-            new_y -= 4 * bar_velocity_;
-        }
-        else if (key->data == 115)
-        {
-            new_y += 4 * bar_velocity_;
-        }
-
-        current_y_ = window_limit(new_y);
-    }
 
     int window_limit(int new_y)
     {

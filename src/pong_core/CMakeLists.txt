@@ -33,6 +33,12 @@ ament_target_dependencies(collision_detection rclcpp custom_messages)
 add_executable(ball src/ball_position.cpp)
 ament_target_dependencies(ball rclcpp custom_messages geometry_msgs)
 
+add_executable(right_key src/right_bar_position_key.cpp)
+ament_target_dependencies(right_key rclcpp custom_messages)
+
+add_executable(left_light src/left_bar_position_light.cpp)
+ament_target_dependencies(left_light rclcpp custom_messages geometry_msgs)
+
 
 
 if(BUILD_TESTING)
@@ -75,6 +81,14 @@ install(TARGETS
 
 install(TARGETS
   ball
+  DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+  right_key
+  DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS
+  left_light
   DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files
